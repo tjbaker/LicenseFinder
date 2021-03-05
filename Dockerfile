@@ -2,8 +2,8 @@ FROM ubuntu:18.04
 
 # Versioning
 ENV PIP_INSTALL_VERSION 20.3.4
-ENV PIP3_INSTALL_VERSION 20.0.2
-ENV GO_LANG_VERSION 1.16
+ENV PIP3_INSTALL_VERSION 21.0.1
+ENV GO_LANG_VERSION 1.15.8
 ENV MAVEN_VERSION 3.6.3
 ENV SBT_VERSION 1.4.7
 ENV GRADLE_VERSION 6.8.3
@@ -39,14 +39,23 @@ RUN npm install -g bower && \
     echo '{ "allow_root": true }' > /root/.bowerrc
 
 # install jdk 12
-RUN curl -L -o openjdk12.tar.gz https://download.java.net/java/GA/jdk12.0.2/e482c34c86bd4bf8b56c0b35558996b9/10/GPL/openjdk-12.0.2_linux-x64_bin.tar.gz && \
-    tar xvf openjdk12.tar.gz && \
-    rm openjdk12.tar.gz && \
-    sudo mv jdk-12.0.2 /opt/ && \
-    sudo rm /opt/jdk-12.0.2/lib/src.zip
-ENV JAVA_HOME=/opt/jdk-12.0.2
-ENV PATH=$PATH:$JAVA_HOME/bin
+#RUN curl -L -o openjdk12.tar.gz https://download.java.net/java/GA/jdk12.0.2/e482c34c86bd4bf8b56c0b35558996b9/10/GPL/openjdk-12.0.2_linux-x64_bin.tar.gz && \
+#    tar xvf openjdk12.tar.gz && \
+#    rm openjdk12.tar.gz && \
+#    sudo mv jdk-12.0.2 /opt/ && \
+#    sudo rm /opt/jdk-12.0.2/lib/src.zip
+#ENV JAVA_HOME=/opt/jdk-12.0.2
+#ENV PATH=$PATH:$JAVA_HOME/bin
+#RUN java -version
+RUN apt-get install -y openjdk-8-jdk
+RUN JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+
+ENV J2SDKDIR=/usr/lib/jvm/java-8-openjdk-amd64
+ENV J2REDIR=/usr/lib/jvm/java-8-openjdk-amd64/jre
+ENV PATH=$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin:/usr/lib/jvm/java-8-openjdk-amd64/jre/bin
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 RUN java -version
+
 
 # install rebar3
 RUN curl -o rebar3 https://s3.amazonaws.com/rebar3/rebar3 && \
@@ -140,7 +149,7 @@ RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --profile minimal
 # install NuGet (w. mono)
 # https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools#macoslinux
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&\
-  echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list &&\
+  echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list &&\
   apt-get update &&\
   apt-get install -y mono-complete &&\
   curl -o "/usr/local/bin/nuget.exe" "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" &&\
@@ -148,7 +157,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
 
 # install dotnet core
 WORKDIR /tmp
-RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb &&\
+RUN wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb &&\
   sudo dpkg -i packages-microsoft-prod.deb &&\
   rm packages-microsoft-prod.deb &&\
   sudo apt-get update &&\
@@ -156,9 +165,9 @@ RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsof
 
 # install Composer
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 4F4EA0AAE5267A6C &&\
-    echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu xenial main" | sudo tee /etc/apt/sources.list.d/php.list &&\
+    echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu bionic main" | sudo tee /etc/apt/sources.list.d/php.list &&\
     apt-get update &&\
-    apt-get install -y php7.4-cli &&\
+    DEBIAN_FRONTEND="noninteractive" apt-get install -y php7.4-cli &&\
     EXPECTED_COMPOSER_INSTALLER_CHECKSUM="$(curl --silent https://composer.github.io/installer.sig)" &&\
     php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" &&\
     ACTUAL_COMPOSER_INSTALLER_CHECKSUM="$(php -r "echo hash_file('sha384', 'composer-setup.php');")" &&\
